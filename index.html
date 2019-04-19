@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Hello World!</title>
+  <script>
+    // require('./live-speech.bundle.js');
+    "use strict";
+    var path = require('path');
+
+    var fs = require('fs');
+
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, 'My First Project-edfadc4e8987.json');
+
+    var record = require('node-record-lpcm16');
+
+    var speech = require('@google-cloud/speech'); // Creates a client
+
+    // document.querySelector('.btn.start').hidden = false;
+    async function main() {
+      // Imports the Google Cloud client library
+      console.log('mai.js');
+
+      var client = new speech.SpeechClient({
+        projectId: 'absolute-code-236207',
+        keyFilename: path.resolve(__dirname, 'My First Project-edfadc4e8987.json')
+      }); // The audio file's encoding, sample rate in hertz, and BCP-47 language code
+
+      var config = {
+        encoding: 'LINEAR16',
+        sampleRateHertz: 16000,
+        languageCode: 'en-US'
+      };
+      var request = {
+        config: config,
+        interimResults: false // If you want interim results, set this to true
+
+      };
+      var recognizeStream = client.streamingRecognize(request).on('error', console.error).on('data', function (data) {
+        let element = document.querySelector('.voice-to-text')
+        element.innerHTML = data.results[0] && data.results[0].alternatives[0] ? data.results[0].alternatives[0].transcript : 'You dint speak to me yet..'
+        return process.stdout.write(data.results[0] && data.results[0].alternatives[0] ? "Transcription: ".concat(data.results[0].alternatives[0].transcript, "\n") : "\n\nReached transcription time limit, press Ctrl+C\n");
+      }); // Start recording and send the microphone input to the Speech API
+
+      record.start({
+        sampleRateHertz: 16000,
+        threshold: 0,
+        // Other options, see https://www.npmjs.com/package/node-record-lpcm16#options
+        verbose: false,
+        recordProgram: 'sox',
+        // Try also "arecord" or "sox"
+        silence: '10.0'
+      }).on('error', console.error).pipe(recognizeStream);
+      console.log('Listening, press Ctrl+C to stop.'); // [END speech_transcribe_streaming_mic]
+    }
+
+
+    function start() {
+      console.log('Starting')
+      document.querySelector('.btn.start').hidden = true
+      document.querySelector('.btn.stop').hidden = false
+      main()
+        .catch(console.error);
+    }
+
+    function stop() {
+      console.log('Stopping')
+      document.querySelector('.btn.start').hidden = false
+      document.querySelector('.btn.stop').hidden = true
+      record.stop()
+    }
+
+    function onLoad() {
+      document.querySelector('.btn.stop').hidden = true
+      console.log('loaded')
+    }
+
+  </script>
+  <style>
+    body {
+      text-align: center;
+    }
+    .container {
+      width: 50%;
+      margin:auto;
+      border: 1px solid #1e74aa;
+      border-radius: 5px;
+      box-shadow: 0 0 0 1pt #1e74aa;
+      height: 47vh;
+    }
+    .btn {
+      float: inherit;
+      border-radius: 50%;
+      height: 75px;
+      width: 75px;
+      color: white;
+      cursor: pointer;
+      text-align: center;
+      border: 0;
+      position: relative;
+      background-color: white;
+      outline: none;
+    }
+
+    .btn.start svg path{
+      fill: #1e74aa;
+    }
+    .btn.stop svg path{
+      fill: #c94346;
+    }
+    .btn.start {
+      border:1px solid #1e74aa;
+    }
+
+    .btn.stop {
+      border:1px solid #c94346;
+      /* background-color: #c94346; */
+    }
+
+    .placeholder {
+      position: relative;
+      float: left;
+      width: 100%;
+      top: 30px;
+      font-size: 18px;
+    }
+
+    .voice-to-text {
+      position: relative;
+      float: left;
+      width: 100%;
+      top: 40px;
+    }
+  </style>
+</head>
+
+<body onload="onLoad()">
+  <div class="container">
+  <h1> Electron is Listening </h1>
+  <button onclick="start()" class="btn start">
+    <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+      y="0px" viewBox="0 0 241.5 241.5" style="enable-background:new 0 0 241.5 241.5;" xml:space="preserve">
+      <path d="M120.75,150.585c26.957,0,48.889-21.931,48.889-48.889V48.889C169.639,21.931,147.707,0,120.75,0
+	C93.793,0,71.861,21.931,71.861,48.889v52.808C71.861,128.654,93.793,150.585,120.75,150.585z M86.861,48.889
+	C86.861,30.203,102.063,15,120.75,15c18.686,0,33.889,15.203,33.889,33.889v52.808c0,18.686-15.202,33.889-33.889,33.889
+	c-18.687,0-33.889-15.203-33.889-33.889V48.889z M55.572,69.748v31.949c0,35.939,29.239,65.177,65.178,65.177
+	c35.939,0,65.178-29.238,65.178-65.177V69.748h15v31.949c0,41.68-31.973,76.019-72.678,79.815V226.5h36.785v15h-88.57v-15h36.785
+	v-44.988c-40.705-3.795-72.678-38.135-72.678-79.815V69.748H55.572z" />
+    </svg>
+  </button>
+  <button onclick="stop()" class="btn stop">
+    <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+      y="0px" viewBox="0 0 241.5 241.5" style="enable-background:new 0 0 241.5 241.5;" xml:space="preserve">
+      <path d="M120.75,150.585c26.957,0,48.889-21.931,48.889-48.889V48.889C169.639,21.931,147.707,0,120.75,0
+	C93.793,0,71.861,21.931,71.861,48.889v52.808C71.861,128.654,93.793,150.585,120.75,150.585z M86.861,48.889
+	C86.861,30.203,102.063,15,120.75,15c18.686,0,33.889,15.203,33.889,33.889v52.808c0,18.686-15.202,33.889-33.889,33.889
+	c-18.687,0-33.889-15.203-33.889-33.889V48.889z M55.572,69.748v31.949c0,35.939,29.239,65.177,65.178,65.177
+	c35.939,0,65.178-29.238,65.178-65.177V69.748h15v31.949c0,41.68-31.973,76.019-72.678,79.815V226.5h36.785v15h-88.57v-15h36.785
+  v-44.988c-40.705-3.795-72.678-38.135-72.678-79.815V69.748H55.572z" />
+    </svg>
+  </button>
+  <div>
+    <span class="placeholder">Is this what you were conveying ...</span>
+    <span class="voice-to-text">Say Something....</span>
+  </div>
+  </div>
+</body>
+
+</html>
